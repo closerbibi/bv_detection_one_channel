@@ -9,6 +9,7 @@
 
 import numpy as np
 import cv2
+import pdb
 
 def im_list_to_blob(ims):
     """Convert a list of images into a network input.
@@ -17,10 +18,14 @@ def im_list_to_blob(ims):
     """
     max_shape = np.array([im.shape for im in ims]).max(axis=0)
     num_images = len(ims)
-    blob = np.zeros((num_images, max_shape[0], max_shape[1], 3),
+    blob = np.zeros((num_images, max_shape[0], max_shape[1], 1),#3),
                     dtype=np.float32)
     for i in xrange(num_images):
         im = ims[i]
+        print im.shape
+        print blob.shape
+        #pdb.set_trace()
+        #im = np.expand_dims(im, axis=3)
         blob[i, 0:im.shape[0], 0:im.shape[1], :] = im
     # Move channels (axis 3) to axis 1
     # Axis order will become: (batch elem, channel, height, width)
@@ -31,7 +36,10 @@ def im_list_to_blob(ims):
 def prep_im_for_blob(im, pixel_means, target_size, max_size):
     """Mean subtract and scale an image for use in a blob."""
     im = im.astype(np.float32, copy=False)
-    im -= pixel_means
+    #im -= pixel_means
+    im = im - pixel_means
+    im = np.swapaxes(im,0,1)
+    im = np.swapaxes(im,1,2)
     im_shape = im.shape
     im_size_min = np.min(im_shape[0:2])
     im_size_max = np.max(im_shape[0:2])
@@ -41,5 +49,7 @@ def prep_im_for_blob(im, pixel_means, target_size, max_size):
         im_scale = float(max_size) / float(im_size_max)
     im = cv2.resize(im, None, None, fx=im_scale, fy=im_scale,
                     interpolation=cv2.INTER_LINEAR)
+    #pdb.set_trace()
+    im = np.expand_dims(im, axis=2)
 
     return im, im_scale

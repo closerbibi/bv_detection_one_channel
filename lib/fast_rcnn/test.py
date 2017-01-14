@@ -18,6 +18,8 @@ from fast_rcnn.nms_wrapper import nms
 import cPickle
 from utils.blob import im_list_to_blob
 import os
+import pdb
+import scipy.io as sio
 
 def _get_image_blob(im):
     """Converts an image into a network input.
@@ -45,8 +47,10 @@ def _get_image_blob(im):
         # Prevent the biggest axis from being more than MAX_SIZE
         if np.round(im_scale * im_size_max) > cfg.TEST.MAX_SIZE:
             im_scale = float(cfg.TEST.MAX_SIZE) / float(im_size_max)
+        #pdb.set_trace()
         im = cv2.resize(im_orig, None, None, fx=im_scale, fy=im_scale,
                         interpolation=cv2.INTER_LINEAR)
+        im = np.expand_dims(im, axis=2)
         im_scale_factors.append(im_scale)
         processed_ims.append(im)
 
@@ -162,14 +166,14 @@ def im_detect(net, im, boxes=None):
     if cfg.TEST.SVM:
         # use the raw scores before softmax under the assumption they
         # were trained as linear SVMs
-        scores = net.blobs['cls_score'].data
+        scores = net.blobs['my_cls_score'].data
     else:
         # use softmax estimated probabilities
         scores = blobs_out['cls_prob']
 
     if cfg.TEST.BBOX_REG:
         # Apply bounding-box regression deltas
-        box_deltas = blobs_out['bbox_pred']
+        box_deltas = blobs_out['my_bbox_pred']
         pred_boxes = bbox_transform_inv(boxes, box_deltas)
         pred_boxes = clip_boxes(pred_boxes, im.shape)
     else:
@@ -224,7 +228,7 @@ def apply_nms(all_boxes, thresh):
             nms_boxes[cls_ind][im_ind] = dets[keep, :].copy()
     return nms_boxes
 
-def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
+def test_net(net, imdb, max_per_image=300, thresh=0.1, vis=False): #max_per_image=100, thresh=0.05
     """Test a Fast R-CNN network on an image database."""
     num_images = len(imdb.image_index)
     # all detections are collected into:
@@ -253,9 +257,17 @@ def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
             # ground truth.
             box_proposals = roidb[i]['boxes'][roidb[i]['gt_classes'] == 0]
 
-        im = cv2.imread(imdb.image_path_at(i))
+        #im = cv2.imread(imdb.image_path_at(i))
+        im = sio.loadmat(imdb.image_path_at(i))['grid']
+        im = np.expand_dims(im, axis=2)
+        #pdb.set_trace()
         _t['im_detect'].tic()
         scores, boxes = im_detect(net, im, box_proposals)
+        #name = 'de_%d.npy' % i
+        #pdb.set_trace()
+        #np.save(name, net.blobs['my_conv1'].data)
+        #print net.blobs['my_cls_score'].data.shape
+        #print net.blobs['my_bbox_pred'].data.shape
         _t['im_detect'].toc()
 
         _t['misc'].tic()
