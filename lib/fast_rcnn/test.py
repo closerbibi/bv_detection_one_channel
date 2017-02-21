@@ -258,7 +258,8 @@ def test_net(net, imdb, max_per_image=300, thresh=0.1, vis=False): #max_per_imag
             box_proposals = roidb[i]['boxes'][roidb[i]['gt_classes'] == 0]
 
         #im = cv2.imread(imdb.image_path_at(i))
-        im = sio.loadmat(imdb.image_path_at(i))['grid']
+        #im = sio.loadmat(imdb.image_path_at(i))['grid']
+        im = np.load(imdb.image_path_at(i))[0]
         im = np.expand_dims(im, axis=2)
         #pdb.set_trace()
         _t['im_detect'].tic()

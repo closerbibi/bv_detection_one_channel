@@ -34,7 +34,7 @@ class inria(imdb):
         self._wnid = (0,5,19,83,124,157)
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
         self._wnid_to_ind = dict(zip(self._wnid, xrange(self.num_classes)))
-        self._image_ext = ['.mat']
+        self._image_ext = ['.npy']
         self._image_index = self._load_image_set_index()
         # Default to roidb handler
         self._roidb_handler = self.selective_search_roidb
@@ -136,7 +136,6 @@ class inria(imdb):
     def rpn_roidb(self):
         gt_roidb = self.gt_roidb()
         rpn_roidb = self._load_rpn_roidb(gt_roidb)
-        pdb.set_trace()
         roidb = datasets.imdb.merge_roidbs(gt_roidb, rpn_roidb)
         #roidb = self._load_rpn_roidb(None)
         return roidb
@@ -144,6 +143,7 @@ class inria(imdb):
     def _load_rpn_roidb(self, gt_roidb):
         pdb.set_trace()
         filename = self.config['rpn_file']
+        pdb.set_trace()
         print 'loading {}'.format(filename)
         assert os.path.exists(filename), \
                'rpn data not found at: {}'.format(filename)
@@ -155,7 +155,7 @@ class inria(imdb):
 
     def _load_selective_search_roidb(self, gt_roidb):
         filename = os.path.abspath(os.path.join(self._devkit_path,
-                                                self.name + '.mat'))
+                                                self.name + '.npy'))
         assert os.path.exists(filename), \
                'Selective search data not found at: {}'.format(filename)
 	raw_data = sio.loadmat(filename)['all_boxes'].ravel()
@@ -202,7 +202,7 @@ class inria(imdb):
         top_k = self.config['top_k']
         box_list = []
         for i in xrange(self.num_images):
-            filename = os.path.join(IJCV_path, self.image_index[i] + '.mat')
+            filename = os.path.join(IJCV_path, self.image_index[i] + '.npy')
             raw_data = sio.loadmat(filename)
             box_list.append((raw_data['boxes'][:top_k, :]-1).astype(np.uint16))
 
@@ -212,6 +212,7 @@ class inria(imdb):
         """
         Load image and bounding boxes info from txt files of INRIAPerson.
         """
+        index=index.split('_')[0]+'_'+index.split('_')[1]
         filename = os.path.join(self._data_path, 'Annotations', index + '.txt')
         # print 'Loading: {}'.format(filename)
 	with open(filename) as f:

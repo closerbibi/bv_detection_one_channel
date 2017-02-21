@@ -100,7 +100,9 @@ class imdb(object):
     def _get_widths(self):
       #return [PIL.Image.open(self.image_path_at(i)).size[0]
       #        for i in xrange(self.num_images)]
-      return [sio.loadmat(self.image_path_at(i))['grid'].shape[1]
+      #return [sio.loadmat(self.image_path_at(i))['grid'].shape[1]
+      #        for i in xrange(self.num_images)]
+      return [np.load(self.image_path_at(i))[0].shape[1]
               for i in xrange(self.num_images)]
 
     def append_flipped_images(self):
@@ -112,7 +114,10 @@ class imdb(object):
             oldx2 = boxes[:, 2].copy() # 2: xmax
             boxes[:, 0] = widths[i] - oldx2 - 1 # width - max: suppose to be small
             boxes[:, 2] = widths[i] - oldx1 - 1 # width - min: supposed to be big
-            assert (boxes[:, 2] >= boxes[:, 0]).all()
+            try:
+                assert (boxes[:, 2] >= boxes[:, 0]).all()
+            except:
+                pdb.set_trace()
             entry = {'boxes' : boxes,
                      'gt_overlaps' : self.roidb[i]['gt_overlaps'],
                      'gt_classes' : self.roidb[i]['gt_classes'],
